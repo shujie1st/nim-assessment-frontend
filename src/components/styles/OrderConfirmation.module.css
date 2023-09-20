@@ -18,6 +18,10 @@ td {
   text-align: center;
 }
 
-tr:nth-child(even) {
+thead th {
   background-color: var(--secondary-text);
+}
+
+tr:nth-child(even) {
+  background-color: rgb(224, 245, 224);
 }
