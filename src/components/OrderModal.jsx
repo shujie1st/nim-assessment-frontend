@@ -6,26 +6,72 @@ function OrderModal({ order, setOrderModal }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [nameErrorMessage, setNameErrorMessage] = useState("");
+  const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
+  const [addressErrorMessage, setAddressErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const placeOrder = async () => {
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        phone,
-        address,
-        items: order
-      })
-    });
+    setNameErrorMessage("");
+    setPhoneErrorMessage("");
+    setAddressErrorMessage("");
 
-    if (response.status === 200) {
-      const data = await response.json();
-      const { id } = data;
-      navigate(`/order-confirmation/${id}`);
+    let valid = true;
+    let fortmattedPhone = "";
+
+    if (!name) {
+      setNameErrorMessage("Name can't be empty");
+      valid = false;
+    }
+
+    if (!phone) {
+      setPhoneErrorMessage("Phone can't be empty");
+      valid = false;
+    } else if (!phone.match("^[-()0-9]+$")) {
+      setPhoneErrorMessage(
+        `Phone number only allows numbers and the characters "-", "(", and ")"`
+      );
+      valid = false;
+    } else {
+      const filteredPhoneNumber = phone
+        .split("")
+        .filter((each) => each.match("^[0-9]+$"))
+        .join("");
+      if (filteredPhoneNumber.length !== 10) {
+        setPhoneErrorMessage("Please input a 10-digit phone number");
+        valid = false;
+      } else {
+        const partOne = filteredPhoneNumber.slice(0, 3);
+        const partTwo = filteredPhoneNumber.slice(3, 6);
+        const partThree = filteredPhoneNumber.slice(6);
+        fortmattedPhone = `(${partOne})${partTwo}-${partThree}`;
+      }
+    }
+
+    if (!address) {
+      setAddressErrorMessage("Address can't be empty");
+      valid = false;
+    }
+
+    if (valid) {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name,
+          phone: fortmattedPhone,
+          address,
+          items: order
+        })
+      });
+
+      if (response.status === 200) {
+        const data = await response.json();
+        const { id } = data;
+        navigate(`/order-confirmation/${id}`);
+      }
     }
   };
   return (
@@ -55,6 +101,7 @@ function OrderModal({ order, setOrderModal }) {
                 }}
                 type="text"
                 id="name"
+                required
               />
             </label>
           </div>
@@ -68,6 +115,7 @@ function OrderModal({ order, setOrderModal }) {
                 }}
                 type="phone"
                 id="phone"
+                required
               />
             </label>
           </div>
@@ -81,10 +129,17 @@ function OrderModal({ order, setOrderModal }) {
                 }}
                 type="phone"
                 id="address"
+                required
               />
             </label>
           </div>
         </form>
+
+        <span className={styles.alert}>
+          <p>{nameErrorMessage}</p>
+          <p>{phoneErrorMessage}</p>
+          <p>{addressErrorMessage}</p>
+        </span>
 
         <div className={styles.orderModalButtons}>
           <button
