@@ -63,3 +63,7 @@
   background-color: var(--secondary-accent);
   color: var(--secondary-color);
 }
+
+.alert {
+  color: red;
+}
